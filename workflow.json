@@ -1,0 +1,435 @@
+{
+  "name": "AI Virtual Try-On",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📌 PHASE 1: INPUT & IMAGE PREP\n\nUpload your Product Image and Character Image.\nThe workflow converts them to Base64 strings so the AI can understand them.",
+        "height": 412,
+        "width": 812,
+        "color": 4
+      },
+      "id": "1576c579-0eba-4fd2-97e8-096c1864a0ec",
+      "name": "Phase 1 - Input",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        192,
+        3616
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📌 PHASE 2: IMAGE GENERATION\n\nCombines the two images and asks OpenRouter (Gemini) to create a photorealistic model wearing your product.",
+        "height": 412,
+        "width": 444,
+        "color": 5
+      },
+      "id": "b439f897-b186-4d8b-a726-17e8f3c4eddc",
+      "name": "Phase 2 - Image Gen",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        3616
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📌 PHASE 3: IMAGE PROCESSING\n\nChecks if the image was generated successfully, then extracts the Base64 data so it can be saved.",
+        "height": 460,
+        "width": 604,
+        "color": 2
+      },
+      "id": "3aaebaa1-795a-47d2-83a9-c1666c4f7696",
+      "name": "Phase 3 - Image Process",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        3616
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📌 PHASE 4: FINAL OUTPUT\n\nDisplays the generated image to the user.",
+        "height": 300,
+        "width": 300
+      },
+      "id": "ea9eeaaf-f71b-4c21-95f2-c1ba2e8eec55",
+      "name": "Phase 4 - Output",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        3616
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Advertise Image Generator",
+        "formDescription": "Convert Simple Product Images to High Quality Advertise Images",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Product Image",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".jpg, .png",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Character Image",
+              "fieldType": "file",
+              "acceptFileTypes": ".jpg, .png",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Style",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Natural Setting"
+                  },
+                  {
+                    "option": "Lifestyle Setting"
+                  },
+                  {
+                    "option": "Urban Environment"
+                  },
+                  {
+                    "option": "Studio Backdrop"
+                  },
+                  {
+                    "option": "Professional Photoshoot"
+                  },
+                  {
+                    "option": "Modern Context"
+                  },
+                  {
+                    "option": "Elegant Atmosphere"
+                  },
+                  {
+                    "option": "Dynamic Scene"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Generate ✨"
+        }
+      },
+      "id": "2a22569d-1ab6-4c9e-9605-0e84f2cb9ac7",
+      "name": "Input1",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        3808
+      ],
+      "webhookId": "af07ae09-005e-43da-b1c8-2cfe12f37806"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "binaryPropertyName": "Product_Image",
+        "destinationKey": "product image data",
+        "options": {}
+      },
+      "id": "87a4d405-da3a-4a75-83c5-6afef4aee224",
+      "name": "Product Image Base64 String1",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        608,
+        3808
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "binaryPropertyName": "Character_Image",
+        "destinationKey": "character image data",
+        "options": {}
+      },
+      "id": "da985708-52b6-4e46-9c9a-3d033503f036",
+      "name": "Character Image Base64 String1",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        832,
+        3808
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const characterImageBase64String =\n  $input.all()[0]?.json[\"character image data\"];\nconst productImageBase64String = $(\"Product Image Base64 String1\").all()[0]\n  ?.json[\"product image data\"];\n\nconst productImageUrl = `data:image/png;base64,${productImageBase64String}`;\nconst characterImageUrl = `data:image/png;base64,${characterImageBase64String}`;\n\nreturn { productImageUrl, characterImageUrl };\n"
+      },
+      "id": "a6b92b34-7ab0-4ba1-9ed3-ca34e4df51e4",
+      "name": "Code1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        3808
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"google/gemini-2.5-flash-image\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"The first image conveys a model's overall style and aesthetic. The second image is a product. Generate a photorealistic image of a fashion model with a similar appearance to the first image actively using this product in a {{ $('Input1').item.json.Style }}. The model should look happy and engaged. Faithfully recreate the product's design, colors, and details from its reference image.\"\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"{{ $json.characterImageUrl }}\"\n          }\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"{{ $json.productImageUrl }}\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "06ac2982-26b9-4987-8966-13d859a0488b",
+      "name": "Nano 🍌1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        3808
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "tFvNBg04gYoC64YI",
+          "name": "OpenRouter account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a35cfb4e-81c4-429b-b7af-e56ca54861a2",
+              "leftValue": "={{ $json.choices[0].message.images[0].image_url.url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "42eceed4-4918-4ab1-9be5-080bd63a7120",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1504,
+        3808
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6355ac9e-1f4c-42a3-8167-8bb8298cd369",
+              "name": "data",
+              "value": "={{ $json.choices[0].message.images[0].image_url.url }}",
+              "type": "string"
+            },
+            {
+              "id": "dc98bc1c-4048-4fcb-80c5-73dc99b78ddd",
+              "name": "base",
+              "value": "={{ $json.choices[0].message.images[0].image_url.url.split(',')[1] }}",
+              "type": "string"
+            },
+            {
+              "id": "8033a47e-f50c-43ae-b404-99d0fb5cf4eb",
+              "name": "mime",
+              "value": "={{ $json.choices[0].message.images[0].image_url.url.split(';')[0].split(':')[1] }}",
+              "type": "string"
+            },
+            {
+              "id": "0e516163-02cc-4242-ba70-ac2bce94d2dd",
+              "name": "fileName",
+              "value": ".png",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bc87ab02-1b76-4bd1-a706-c35f1935aedc",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        3712
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base",
+        "options": {}
+      },
+      "id": "a4f3ae74-3211-4899-90df-77297a459c4d",
+      "name": "Convert to Binary1",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1952,
+        3712
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "returnJson"
+      },
+      "id": "7a8a1e35-094d-49a0-ac88-a299b6c3214c",
+      "name": "Output1",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        3712
+      ],
+      "webhookId": "bd793649-fde9-4104-ad94-7f276dd0fb1d"
+    },
+    {
+      "parameters": {},
+      "id": "da02fc85-f638-49e7-a207-63ea3a86fd0f",
+      "name": "No Operation, do nothing1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        3904
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Input1": {
+      "main": [
+        [
+          {
+            "node": "Product Image Base64 String1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Product Image Base64 String1": {
+      "main": [
+        [
+          {
+            "node": "Character Image Base64 String1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Character Image Base64 String1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Nano 🍌1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nano 🍌1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Convert to Binary1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Binary1": {
+      "main": [
+        [
+          {
+            "node": "Output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "292517d4-af94-4c46-b359-a28d40879d7b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "60daeb6d82c08698e52d6bc5d1a661182f0614bb1b5f8749f39e5d964c501430"
+  },
+  "nodeGroups": [],
+  "id": "vHQfTmFwYO1CtbmD",
+  "tags": []
+}
